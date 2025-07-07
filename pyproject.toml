@@ -1,0 +1,10 @@
+[project]
+name = "soundobj"
+version = "0.1.0"
+description = "Light weight full featured audio playback in Python, brought to you by Miniaudio"
+readme = "README.md"
+authors = [
+    { name = "Carter Temm", email = "cartertemm@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = ["cffi>=1.17.1"]
