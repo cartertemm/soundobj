@@ -111,11 +111,8 @@ class Engine:
 		self._engine = ffi.new("ma_engine*")
 		self._config = config
 		self._initialized = False
-		if config is None:
-			ma_config = lib.ma_engine_config_init()
-		else:
-			ma_config = lib.ma_engine_config_init()
-			# Apply custom configuration if provided
+		ma_config = lib.ma_engine_config_init()
+		if config:
 			if config.channels > 0:
 				ma_config.channels = config.channels
 			if config.sampleRate > 0:

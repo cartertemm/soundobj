@@ -18,6 +18,7 @@ typedef ma_uint8	ma_bool8;
 typedef ma_uint32   ma_bool32;
 typedef unsigned short wchar_t;
 typedef ma_uint64 size_t;
+typedef wchar_t     ma_wchar_win32;
 
 #define MA_TRUE	 1
 #define MA_FALSE	0
@@ -135,9 +136,16 @@ typedef struct ma_node_base ma_node_base;
 typedef struct ma_node_graph ma_node_graph;
 typedef struct ma_context ma_context;
 typedef struct ma_device ma_device;
+typedef struct ma_device_notification ma_device_notification;
 typedef struct ma_engine ma_engine;
 typedef struct ma_sound  ma_sound;
 typedef ma_sound		ma_sound_group;
+typedef void ma_data_source;
+typedef struct ma_resource_manager ma_resource_manager;
+typedef struct ma_log ma_log;
+typedef void ma_node;
+typedef ma_uint8 ma_channel;
+typedef ma_uint32 ma_spinlock;
 
 struct ma_node_base
 {
@@ -169,6 +177,32 @@ typedef struct
 	...;
 } ma_engine_node;
 
+typedef enum
+{
+    ma_device_type_playback = 1,
+    ma_device_type_capture  = 2,
+    ma_device_type_duplex   = ma_device_type_playback | ma_device_type_capture, /* 3 */
+    ma_device_type_loopback = 4
+} ma_device_type;
+
+typedef void (* ma_device_data_proc)(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
+
+typedef union
+{
+	ma_wchar_win32 wasapi[64];
+	...;
+} ma_device_id;
+
+typedef void (* ma_device_notification_proc)(const ma_device_notification* pNotification);
+
+typedef struct
+{
+	void* pUserData;
+	void* (* onMalloc)(size_t sz, void* pUserData);
+	void* (* onRealloc)(void* p, size_t sz, void* pUserData);
+	void  (* onFree)(void* p, void* pUserData);
+} ma_allocation_callbacks;
+
 struct ma_sound
 {
 	ma_engine_node engineNode;
@@ -177,6 +211,25 @@ struct ma_sound
 
 typedef struct
 {
+	ma_resource_manager* pResourceManager;
+	ma_context* pContext;
+	ma_device* pDevice;
+	ma_device_id* pPlaybackDeviceID;
+	ma_device_data_proc dataCallback;
+	ma_device_notification_proc notificationCallback;
+	ma_log* pLog;
+	ma_uint32 listenerCount;
+	ma_uint32 channels;
+	ma_uint32 sampleRate;
+	ma_uint32 periodSizeInFrames;
+	ma_uint32 periodSizeInMilliseconds;
+	ma_uint32 gainSmoothTimeInFrames;
+	ma_uint32 gainSmoothTimeInMilliseconds;
+	ma_uint32 defaultVolumeSmoothTimeInPCMFrames;
+	ma_uint32 preMixStackSizeInBytes;
+	ma_allocation_callbacks allocationCallbacks;
+	ma_bool32 noAutoStart;
+	ma_bool32 noDevice;
 	...;
 } ma_engine_config;
 
@@ -237,13 +290,6 @@ typedef struct
 	...;
 } ma_fence;
 
-typedef void ma_data_source;
-typedef struct ma_resource_manager ma_resource_manager;
-typedef struct ma_log ma_log;
-typedef void ma_node;
-typedef ma_uint8 ma_channel;
-typedef ma_uint32 ma_spinlock;
-
 #define MA_CHANNEL_NONE			   0
 #define MA_CHANNEL_MONO			   1
 #define MA_CHANNEL_FRONT_LEFT		 2
@@ -267,14 +313,6 @@ typedef ma_uint32 ma_spinlock;
 #define MA_CHANNEL_AUX_0			  20
 
 typedef ma_uint8 ma_channel_position;
-
-typedef struct
-{
-	void* pUserData;
-	void* (* onMalloc)(size_t sz, void* pUserData);
-	void* (* onRealloc)(void* p, size_t sz, void* pUserData);
-	void  (* onFree)(void* p, void* pUserData);
-} ma_allocation_callbacks;
 
 typedef struct
 {
