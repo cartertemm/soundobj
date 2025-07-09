@@ -54,11 +54,11 @@ python build_ffi.py
 
 ## Roadmap
 
-- [] Upload to PyPI
-- [] Memory and URL streams
-- [] A more comprehensive environment for managing multiple sounds simultaniously
-- [] More demos/examples
-- [] Optional support for HRTF, now that [Steam Audio](https://github.com/ValveSoftware/steam-audio) has been made open-source and is licensed under Apache-2.0. This wouldn't be included by default but would be an optional dependency for those who need it.
+- [ ] Upload to PyPI
+- [ ] Memory and URL streams
+- [ ] A more comprehensive environment for managing multiple sounds simultaniously
+- [ ] More demos/examples
+- [ ] Optional support for HRTF, now that [Steam Audio](https://github.com/ValveSoftware/steam-audio) has been made open-source and is licensed under Apache-2.0. This wouldn't be included by default but would be an optional dependency for those who need it.
 
 ### How you can help
 
