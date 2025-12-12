@@ -33,12 +33,13 @@ That said, I wanted something portable, permissive, and that just works with an 
 - Python 3.11+ (probably works on lower versions as well, this just hasn't been tested)
 - cffi library
 - miniaudio library (included in `lib/` directory)
+- vcpkg (included as submodule in vcpkg/ directory)
 
 ### Build Instructions
 
-1. Clone the repository:
+1. Clone the repository with submodules:
 ```bash
-git clone https://github.com/cartertemm/soundobj.git
+git clone --recursive https://github.com/cartertemm/soundobj.git
 cd soundobj
 ```
 
@@ -47,7 +48,7 @@ cd soundobj
 pip install cffi
 ```
 
-3. Build the FFI wrapper:
+3. Build the FFI wrapper (will automatically handle VCPKG):
 ```bash
 python build_ffi.py
 ```
@@ -70,7 +71,16 @@ If you are willing and able, hack on one of these features.
 Most things should be pretty self explanatory, as this library is a high-level API over the already high-level ma_engine API.
 If not, the [Miniaudio programming manual](https://miniaud.io/docs/manual/index.html) is a good starting point. It explains concepts like the coordinate system, positioning in 3D space, attenuation, etc.
 
-### Basic Audio Playback
+### One-line audio playback
+
+Just want a quick sound or earcon to play and don't care about anything else?
+
+```python
+import soundobj
+soundobj.play_sound("path/to/audio.wav") # Sound is already playing! It will automatically close when complete and you do not have any control over the sound after this point.
+```
+
+### Basic Audio Playback with controls
 
 ```python
 import soundobj
@@ -227,6 +237,16 @@ Configuration options for engine initialization.
 - `periodSizeInMilliseconds`: Period size in ms (default: 0 = auto)
 - `noAutoStart`: Don't auto-start engine (default: False)
 - `noDevice`: Initialize without audio device (default: False)
+
+### Global functions
+
+#### play_sound
+
+`play_sound(path, group = None) -> bool`
+
+Plays what miniaudio calls an inline sound. They're meant for convenience as it takes only one line of code to get one playing and you don't have to manage keeping it alive. The sacrifice however is that you get 0 control over the sound once it starts playing. Returns True if the sound played successfully, False otherwise.
+
+The group parameter will allow you to attach such a sound to a ma_sound_group thus giving you volume/positioning control, keep it set at None for now (WIP at this time).
 
 ### Enums
 

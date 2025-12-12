@@ -109,6 +109,7 @@ class Engine:
 	"""
 	def __init__(self, config: Optional[EngineConfig] = None):
 		self._engine = ffi.new("ma_engine*")
+		self._resource_manager = ffi.new("ma_resource_manager*")
 		self._config = config
 		self._initialized = False
 		ma_config = lib.ma_engine_config_init()
@@ -127,6 +128,14 @@ class Engine:
 				ma_config.noAutoStart = 1
 			if config.noDevice:
 				ma_config.noDevice = 1
+		rm_config = lib.ma_resource_manager_config_init()
+		if rm_config:
+			rm_config.ppCustomDecodingBackendVTables = lib.soundobj_get_custom_decoders(ffi.addressof(rm_config, "customDecodingBackendCount"))
+			result = lib.ma_resource_manager_init(ffi.addressof(rm_config), self._resource_manager)
+			if result == lib.MA_SUCCESS:
+				ma_config.pResourceManager = self._resource_manager
+			else:
+				self._resource_manager = ffi.NULL # if fail it's not game over, just custom formats won't be available. Maybe log somewhere if ma_log doesn't do enough?
 		result = lib.ma_engine_init(ffi.addressof(ma_config), self._engine)
 		if result != lib.MA_SUCCESS:
 			raise MiniAudioError(f"Failed to initialize engine: {result}")
@@ -135,6 +144,8 @@ class Engine:
 		"""Cleanup the engine when the object is destroyed."""
 		if hasattr(self, '_initialized') and self._initialized:
 			lib.ma_engine_uninit(self._engine)
+			if self._resource_manager:
+				lib.ma_resource_manager_uninit(self._resource_manager)
 	def start(self) -> bool:
 		"""Start the audio engine.
 		Returns:
@@ -209,7 +220,7 @@ class Engine:
 		if not self._initialized:
 			return False
 		file_path_bytes = file_path.encode('utf-8')
-		result = lib.ma_engine_play_sound(self._engine, file_path_bytes, group)
+		result = lib.ma_engine_play_sound(self._engine, file_path_bytes, group if group else ffi.NULL)
 		return result == lib.MA_SUCCESS
 	# Listener control methods
 	@property
@@ -1027,6 +1038,9 @@ class Sound:
 		if not hasattr(self, '_loaded') or not self._loaded:
 			return 0
 		return lib.ma_sound_get_listener_index(self._sound)
+
+def play_sound(file_path: str, group=None) -> bool:
+	return _global_engine.play_sound(path, group)
 
 
 _global_engine = Engine()

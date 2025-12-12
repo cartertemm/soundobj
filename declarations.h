@@ -118,6 +118,17 @@ typedef enum
 
 typedef enum
 {
+	ma_format_unknown = 0,     /* Mainly used for indicating an error, but also used as the default for the output format for decoders. */
+	ma_format_u8      = 1,
+	ma_format_s16     = 2,     /* Seems to be the most widely supported format. */
+	ma_format_s24     = 3,     /* Tightly packed. 3 bytes per sample. */
+	ma_format_s32     = 4,
+	ma_format_f32     = 5,
+	ma_format_count
+} ma_format;
+
+typedef enum
+{
 	/* Resource manager flags. */
 	MA_SOUND_FLAG_STREAM				= 0x00000001,   /* MA_RESOURCE_MANAGER_DATA_SOURCE_FLAG_STREAM */
 	MA_SOUND_FLAG_DECODE				= 0x00000002,   /* MA_RESOURCE_MANAGER_DATA_SOURCE_FLAG_DECODE */
@@ -142,7 +153,9 @@ typedef struct ma_sound  ma_sound;
 typedef ma_sound		ma_sound_group;
 typedef void ma_data_source;
 typedef struct ma_resource_manager ma_resource_manager;
+typedef struct ma_vfs ma_vfs;
 typedef struct ma_log ma_log;
+typedef struct ma_decoding_backend_vtable ma_decoding_backend_vtable;
 typedef void ma_node;
 typedef ma_uint8 ma_channel;
 typedef ma_uint32 ma_spinlock;
@@ -159,6 +172,10 @@ struct ma_node_graph
 	...;
 };
 
+struct ma_resource_manager
+{
+	...;
+};
 
 struct ma_context
 {
@@ -235,6 +252,23 @@ typedef struct
 
 typedef struct
 {
+	ma_allocation_callbacks allocationCallbacks;
+	ma_log* pLog;
+	ma_format decodedFormat;        /* The decoded format to use. Set to ma_format_unknown (default) to use the file's native format. */
+	ma_uint32 decodedChannels;      /* The decoded channel count to use. Set to 0 (default) to use the file's native channel count. */
+	ma_uint32 decodedSampleRate;    /* the decoded sample rate to use. Set to 0 (default) to use the file's native sample rate. */
+	ma_uint32 jobThreadCount;       /* Set to 0 if you want to self-manage your job threads. Defaults to 1. */
+	size_t jobThreadStackSize;
+	ma_uint32 jobQueueCapacity;     /* The maximum number of jobs that can fit in the queue at a time. Defaults to MA_JOB_TYPE_RESOURCE_MANAGER_QUEUE_CAPACITY. Cannot be zero. */
+	ma_uint32 flags;
+	ma_vfs* pVFS;                   /* Can be NULL in which case defaults will be used. */
+	ma_decoding_backend_vtable** ppCustomDecodingBackendVTables;
+	ma_uint32 customDecodingBackendCount;
+	void* pCustomDecodingBackendUserData;
+} ma_resource_manager_config;
+
+typedef struct
+{
 	...;
 } ma_engine_node_config;
 
@@ -244,17 +278,6 @@ typedef struct
 	float y;
 	float z;
 } ma_vec3f;
-
-typedef enum
-{
-	ma_format_unknown = 0,
-	ma_format_u8	  = 1,
-	ma_format_s16	 = 2,
-	ma_format_s24	 = 3,
-	ma_format_s32	 = 4,
-	ma_format_f32	 = 5,
-	ma_format_count
-} ma_format;
 
 typedef enum
 {
@@ -363,6 +386,10 @@ void ma_engine_listener_set_enabled(ma_engine* pEngine, ma_uint32 listenerIndex,
 ma_bool32 ma_engine_listener_is_enabled(const ma_engine* pEngine, ma_uint32 listenerIndex);
 ma_result ma_engine_play_sound_ex(ma_engine* pEngine, const char* pFilePath, ma_node* pNode, ma_uint32 nodeInputBusIndex);
 ma_result ma_engine_play_sound(ma_engine* pEngine, const char* pFilePath, ma_sound_group* pGroup);
+
+ma_resource_manager_config ma_resource_manager_config_init(void);
+ma_result ma_resource_manager_init(const ma_resource_manager_config* pConfig, ma_resource_manager* pResourceManager);
+void ma_resource_manager_uninit(ma_resource_manager* pResourceManager);
 
 ma_sound_config ma_sound_config_init(void);
 ma_sound_config ma_sound_config_init_2(ma_engine* pEngine);
@@ -507,3 +534,4 @@ ma_result ma_engine_node_get_heap_size(const ma_engine_node_config* pConfig, siz
 ma_result ma_engine_node_init_preallocated(const ma_engine_node_config* pConfig, void* pHeap, ma_engine_node* pEngineNode);
 ma_result ma_engine_node_init(const ma_engine_node_config* pConfig, const ma_allocation_callbacks* pAllocationCallbacks, ma_engine_node* pEngineNode);
 void ma_engine_node_uninit(ma_engine_node* pEngineNode, const ma_allocation_callbacks* pAllocationCallbacks);
+ma_decoding_backend_vtable** soundobj_get_custom_decoders(ma_uint32* count);
