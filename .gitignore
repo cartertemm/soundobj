@@ -168,3 +168,6 @@ poetry.toml
 
 # LSP config files
 pyrightconfig.json
+
+# Soundobj VCPKG install
+vcpkg_installed/
