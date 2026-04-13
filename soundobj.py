@@ -1040,7 +1040,7 @@ class Sound:
 		return lib.ma_sound_get_listener_index(self._sound)
 
 def play_sound(file_path: str, group=None) -> bool:
-	return _global_engine.play_sound(path, group)
+	return _global_engine.play_sound(file_path, group)
 
 
 _global_engine = Engine()
