@@ -1,0 +1,4 @@
+include declarations.h
+include vcpkg.py
+include vcpkg.json
+recursive-include lib *.c *.h

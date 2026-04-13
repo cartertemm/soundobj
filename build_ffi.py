@@ -2,16 +2,25 @@ import os
 import sys
 from pathlib import Path
 from cffi import FFI
+
+# Use the directory containing this script as the root for path resolutions
+root_dir = Path(__file__).parent.resolve()
+if str(root_dir) not in sys.path:
+	sys.path.append(str(root_dir))
+
 import vcpkg
-lib_dir = Path(os.getcwd()) / "lib"
+lib_dir = root_dir / "lib"
+
 if not vcpkg.install_path.exists():
 	vcpkg.build()
 ffibuilder = FFI()
 
-
-with open("declarations.h", "r") as f:
+with open(root_dir / "declarations.h", "r") as f:
 	cdefs = f.read()
 ffibuilder.cdef(cdefs)
+
+include_dirs = [str(root_dir), str(lib_dir), str(vcpkg.install_path / "include")]
+library_dirs = [str(vcpkg.install_path / "lib")]
 
 ffibuilder.set_source("_c_miniaudio", """
 	#include <stdint.h>
@@ -20,18 +29,23 @@ ffibuilder.set_source("_c_miniaudio", """
 	#include "lib/miniaudio.h"
 	#include "lib/miniaudio_libopus.h"
 	#include "lib/miniaudio_libvorbis.h"
+	
+	// Include implementation files directly to avoid complex linking issues during pip install
+	#include "lib/miniaudio_libopus.c"
+	#include "lib/miniaudio_libvorbis.c"
+
 	ma_decoding_backend_vtable** soundobj_get_custom_decoders(ma_uint32* count) {
-		static ma_decoding_backend_vtable* custom_decoders[2]; // Can't use quick initialization in c because of nonconstance.
+		static ma_decoding_backend_vtable* custom_decoders[2];
 		custom_decoders[0] = ma_decoding_backend_libvorbis;
 		custom_decoders[1] = ma_decoding_backend_libopus;
 		if (count) *count = sizeof(custom_decoders) / sizeof(custom_decoders[0]);
 		return custom_decoders;
 	}
 """,
-	sources = ["lib/miniaudio_libopus.c", "lib/miniaudio_libvorbis.c"],
-	include_dirs=[lib_dir, str(vcpkg.install_path / "include")],
-	library_dirs=[str(vcpkg.install_path / "lib")],
+	include_dirs=include_dirs,
+	library_dirs=library_dirs,
 	libraries=["opus", "opusfile", "ogg", "vorbis", "vorbisfile"]
 )
 
-ffibuilder.compile(verbose=True)
+if __name__ == "__main__":
+	ffibuilder.compile(verbose=True)
