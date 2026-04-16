@@ -1,7 +1,28 @@
+import sys
 from typing import Optional, Union
 from dataclasses import dataclass
 from enum import Enum
 from _c_miniaudio import ffi, lib
+
+
+# hack: miniaudio's WASAPI backend calls CoInitializeEx(NULL, COINIT_MULTITHREADED),
+# which puts the calling thread in an MTA and breaks OLE-dependent APIs like wx
+# clipboard and drag-and-drop. Initializing STA first causes miniaudio's call to
+# return RPC_E_CHANGED_MODE, so it skips its matching CoUninitialize and leaves
+# the thread in STA where OLE works correctly.
+# Thanks for nothing, Windows
+if sys.platform == 'win32':
+	import ctypes
+	_ole32 = ctypes.WinDLL('ole32')
+	_ole32.CoInitializeEx.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+	_ole32.CoInitializeEx.restype = ctypes.c_long
+	_COINIT_APARTMENTTHREADED = 0x2
+
+	def _ensure_sta():
+		_ole32.CoInitializeEx(None, _COINIT_APARTMENTTHREADED)
+else:
+	def _ensure_sta():
+		pass
 
 
 class AttenuationModel(Enum):
@@ -108,6 +129,7 @@ class Engine:
 		_initialized: Whether the engine has been successfully initialized.
 	"""
 	def __init__(self, config: Optional[EngineConfig] = None):
+		_ensure_sta()
 		self._engine = ffi.new("ma_engine*")
 		self._resource_manager = ffi.new("ma_resource_manager*")
 		self._config = config
