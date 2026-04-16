@@ -18,7 +18,7 @@ That said, I wanted something portable, permissive, and that just works with an 
 ## Features
 
 - Truly simple audio playback
-- Support for WAV, MP3, FLAC, AIFF, AU, OGG Vorbis, and everything miniaudio is able to work with
+- Support for WAV, MP3, FLAC, OGG Vorbis, Opus, and everything else miniaudio is able to work with
 - Adjust volume, pitch, pan, and spatial properties during playback
 - Full support for positional audio, distance attenuation, and Doppler effects
 - Clean property-based Python interface
@@ -30,7 +30,7 @@ That said, I wanted something portable, permissive, and that just works with an 
 
 ### Prerequisites
 
-- Python 3.11+ (probably works on lower versions as well, this just hasn't been tested)
+- Python 3.13+
 - cffi library
 - miniaudio library (included in `lib/` directory)
 - vcpkg (included as submodule in vcpkg/ directory)
@@ -86,7 +86,7 @@ soundobj.play_sound("path/to/audio.wav") # Sound is already playing! It will aut
 import soundobj
 
 # Create a sound object and load an audio file
-snd = soundobj.Sound("path/to/audio.wav")
+snd = soundobj.Sound(source="path/to/audio.wav")
 snd.play()  # Play the sound
 snd.looping = True  # Enable looping
 snd.volume = 0.8
@@ -159,7 +159,7 @@ engine.set_listener_enabled(0, True)
 
 #### Engine
 
-The main audio engine that manages playback and 3D audio processing globally. First start with an instance of `Sound` and fall back to this if needed.
+The main audio engine that manages playback and 3D audio processing globally. A default global engine is created automatically at import, so most code can start with `Sound` directly and only instantiate `Engine` when custom configuration is needed.
 
 **Properties:**
 - `volume`: Master volume (0.0 to 1.0+)
@@ -215,15 +215,15 @@ Represents an individual audio sound with full control over playback and 3D prop
 - `listener_index`: Current listener index (read-only)
 
 **Methods:**
-- `load(source, stream=True)`: Load audio from file, URL, or bytes
+- `load(source, stream=True)`: Load audio — currently only file paths are supported; URL and bytes sources raise `NotImplementedError`
 - `load_from_file(filename, stream=True)`: Load from file
-- `load_from_url(url, stream=True)`: Load from URL (not implemented)
-- `load_from_memory(data, stream=True)`: Load from memory (not implemented)
+- `load_from_url(url, stream=True)`: Load from URL (not implemented, raises `NotImplementedError`)
+- `load_from_memory(data, stream=True)`: Load from memory (not implemented, raises `NotImplementedError`)
 - `play()`: Start playback
 - `pause()`: Pause playback
 - `stop()`: Stop playback
-- `fade_in(duration_ms, start_vol=0.0, end_vol=1.0)`: Fade in effect
-- `fade_out(duration_ms, end_vol=0.0)`: Fade out effect
+- `fade_in(duration_ms, start_volume=0.0, end_volume=1.0)`: Fade in effect
+- `fade_out(duration_ms, end_volume=0.0)`: Fade out effect
 
 #### EngineConfig
 
