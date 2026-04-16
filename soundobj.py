@@ -178,10 +178,12 @@ class Engine:
 	def __del__(self):
 		"""Cleanup the engine when the object is destroyed."""
 		if hasattr(self, '_initialized') and self._initialized:
-			# miniaudio's context uninit calls CoUninitialize on this thread.
-			# Bump the STA ref count first so the net effect leaves the main
-			# thread still STA-initialized for any post-engine COM users.
-			_ensure_sta()
+			# Module globals can be None during interpreter shutdown; skip cleanup since the process is about to exit anyway.
+			if lib is None:
+				return
+			# Bump STA ref count so miniaudio's CoUninitialize during context uninit leaves the main thread STA. Skip at interpreter shutdown, when the module global may already be None.
+			if _ensure_sta is not None:
+				_ensure_sta()
 			lib.ma_engine_uninit(self._engine)
 			if self._resource_manager:
 				lib.ma_resource_manager_uninit(self._resource_manager)
@@ -464,6 +466,9 @@ class Sound:
 	def __del__(self):
 		"""Cleanup the sound when the object is destroyed."""
 		if hasattr(self, '_loaded') and self._loaded and self._sound:
+			# Module globals can be None during interpreter shutdown; skip cleanup since the process is about to exit anyway.
+			if lib is None:
+				return
 			lib.ma_sound_uninit(self._sound)
 
 	def load(self, source: Optional[bytes|str] = None, stream: bool = True) -> bool:
