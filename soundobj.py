@@ -1,4 +1,5 @@
 import sys
+import threading
 from typing import Optional, Union
 from dataclasses import dataclass
 from enum import Enum
@@ -158,13 +159,29 @@ class Engine:
 				ma_config.pResourceManager = self._resource_manager
 			else:
 				self._resource_manager = ffi.NULL # if fail it's not game over, just custom formats won't be available. Maybe log somewhere if ma_log doesn't do enough?
-		result = lib.ma_engine_init(ffi.addressof(ma_config), self._engine)
+		# Run ma_engine_init on a worker thread. miniaudio's WASAPI path
+		# (ma_context_get_MMDevice__wasapi) calls CoUninitialize unconditionally
+		# even when its CoInitializeEx returned RPC_E_CHANGED_MODE, which would
+		# drop our STA ref count to 0 and crash mid-init. A fresh worker has no
+		# prior COM state, so miniaudio's init/uninit balance there and the main
+		# thread's STA apartment is untouched.
+		init_result = [None]
+		def _do_init():
+			init_result[0] = lib.ma_engine_init(ffi.addressof(ma_config), self._engine)
+		t = threading.Thread(target=_do_init)
+		t.start()
+		t.join()
+		result = init_result[0]
 		if result != lib.MA_SUCCESS:
 			raise MiniAudioError(f"Failed to initialize engine: {result}")
 		self._initialized = True
 	def __del__(self):
 		"""Cleanup the engine when the object is destroyed."""
 		if hasattr(self, '_initialized') and self._initialized:
+			# miniaudio's context uninit calls CoUninitialize on this thread.
+			# Bump the STA ref count first so the net effect leaves the main
+			# thread still STA-initialized for any post-engine COM users.
+			_ensure_sta()
 			lib.ma_engine_uninit(self._engine)
 			if self._resource_manager:
 				lib.ma_resource_manager_uninit(self._resource_manager)
