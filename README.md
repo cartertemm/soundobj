@@ -44,6 +44,13 @@ git clone --recursive https://github.com/cartertemm/soundobj.git
 cd soundobj
 ```
 
+Or if you already have a clone of the repository:
+
+```bash
+cd soundobj
+git submodule update --init --recursive
+```
+
 2. Install Python dependencies:
 ```bash
 pip install cffi
