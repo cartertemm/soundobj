@@ -21,6 +21,7 @@ That said, I wanted something portable, permissive, and that just works with an 
 - Support for WAV, MP3, FLAC, OGG Vorbis, Opus, and everything else miniaudio is able to work with
 - Adjust volume, pitch, pan, and spatial properties during playback
 - Full support for positional audio, distance attenuation, and Doppler effects
+- Stream audio directly from HTTP/FTP(s) URLs, including live streams
 - Clean property-based Python interface
 - Support for multiple 3D audio listeners
 - Customizable engine settings for different use cases
@@ -56,7 +57,7 @@ python build_ffi.py
 ## Roadmap
 
 - [ ] Upload to PyPI
-- [ ] Memory and URL streams
+- [ ] Memory streams
 - [ ] A more comprehensive environment for managing multiple sounds simultaniously
 - [ ] More demos/examples
 - [ ] Optional support for HRTF, now that [Steam Audio](https://github.com/ValveSoftware/steam-audio) has been made open-source and is licensed under Apache-2.0. This wouldn't be included by default but would be an optional dependency for those who need it.
@@ -93,6 +94,22 @@ snd.volume = 0.8
 snd.pitch = 1.2
 # Wait a bit
 snd.stop()
+```
+
+### Streaming audio from a URL
+
+Pass any `http://` or `https://` URL as the source and it works the same as a local file. This includes both regular audio files and live streams (e.g. internet radio) where the duration isn't known in advance.
+
+```python
+import soundobj
+
+snd = soundobj.Sound(source="https://example.com/audio.mp3")
+snd.play()
+
+# Or an internet radio stream
+radio = soundobj.Sound(source="https://stream.example.com/live")
+radio.play()
+radio.volume = 0.5
 ```
 
 ### 3D Spatial Audio
@@ -215,9 +232,9 @@ Represents an individual audio sound with full control over playback and 3D prop
 - `listener_index`: Current listener index (read-only)
 
 **Methods:**
-- `load(source, stream=True)`: Load audio — currently only file paths are supported; URL and bytes sources raise `NotImplementedError`
+- `load(source, stream=True)`: Load audio from a file path, URL, or bytes; auto-detects the source type
 - `load_from_file(filename, stream=True)`: Load from file
-- `load_from_url(url, stream=True)`: Load from URL (not implemented, raises `NotImplementedError`)
+- `load_from_url(url, stream=True)`: Load from an HTTP/HTTPS URL; works for both regular files and live streams
 - `load_from_memory(data, stream=True)`: Load from memory (not implemented, raises `NotImplementedError`)
 - `play()`: Start playback
 - `pause()`: Pause playback
