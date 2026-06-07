@@ -14,7 +14,6 @@ lib_dir = root_dir / "lib"
 if not vcpkg.install_path.exists():
 	vcpkg.build()
 ffibuilder = FFI()
-curl_lib = "libcurl" if sys.platform == "win32" else "curl"
 
 with open(root_dir / "declarations.h", "r") as f:
 	cdefs = f.read()
@@ -23,6 +22,17 @@ ffibuilder.cdef(cdefs)
 include_dirs = [str(root_dir), str(lib_dir), str(vcpkg.install_path / "include")]
 library_dirs = [str(vcpkg.install_path / "lib")]
 
+common_libs = ["opus", "opusfile", "ogg", "vorbis", "vorbisfile"]
+if sys.platform == "win32":
+	libraries = common_libs + ["libcurl", "zlib", "ws2_32", "crypt32", "wldap32", "advapi32", "secur32", "iphlpapi", "normaliz"]
+	extra_link_args = []
+elif sys.platform == "darwin":
+	libraries = common_libs + ["curl", "ssl", "crypto", "z"]
+	extra_link_args = []
+else:
+	libraries = common_libs + ["curl", "ssl", "crypto", "z"]
+	extra_link_args = []
+
 ffibuilder.set_source("_c_miniaudio", """
 	#include <stdint.h>
 	#include <stdlib.h>
@@ -30,7 +40,7 @@ ffibuilder.set_source("_c_miniaudio", """
 	#include "lib/miniaudio.h"
 	#include "lib/miniaudio_libopus.h"
 	#include "lib/miniaudio_libvorbis.h"
-	
+
 	// Include implementation files directly to avoid complex linking issues during pip install
 	#include "lib/miniaudio_libopus.c"
 	#include "lib/miniaudio_libvorbis.c"
@@ -47,7 +57,8 @@ ffibuilder.set_source("_c_miniaudio", """
 """,
 	include_dirs=include_dirs,
 	library_dirs=library_dirs,
-	libraries=["opus", "opusfile", "ogg", "vorbis", "vorbisfile", curl_lib, "zlib", "ws2_32", "crypt32", "wldap32", "advapi32", "secur32", "iphlpapi", "normaliz"]
+	libraries=libraries,
+	extra_link_args=extra_link_args,
 )
 
 if __name__ == "__main__":
