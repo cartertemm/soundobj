@@ -46,6 +46,7 @@ ffibuilder.set_source("_c_miniaudio", """
 	#include "lib/miniaudio_libvorbis.c"
 	#include <curl/curl.h>
 	#include "lib/url_vfs.c"
+	#include "lib/soundobj_wasapi_monitor.c"
 
 	ma_decoding_backend_vtable** soundobj_get_custom_decoders(ma_uint32* count) {
 		static ma_decoding_backend_vtable* custom_decoders[2];

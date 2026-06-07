@@ -182,20 +182,22 @@ class Engine:
 		if result != lib.MA_SUCCESS:
 			raise MiniAudioError(f"Failed to initialize engine: {result}")
 		self._initialized = True
+		lib.soundobj_wasapi_monitor_init(self._engine)
 	def __del__(self):
 		"""Cleanup the engine when the object is destroyed."""
+		# Module globals can be None during interpreter shutdown; skip cleanup since the process is about to exit anyway.
+		if lib is None:
+			return
+		# Bump STA ref count so miniaudio's CoUninitialize during context uninit leaves the main thread STA. Skip at interpreter shutdown, when the module global may already be None.
+		if _ensure_sta is not None:
+			_ensure_sta()
 		if hasattr(self, '_initialized') and self._initialized:
-			# Module globals can be None during interpreter shutdown; skip cleanup since the process is about to exit anyway.
-			if lib is None:
-				return
-			# Bump STA ref count so miniaudio's CoUninitialize during context uninit leaves the main thread STA. Skip at interpreter shutdown, when the module global may already be None.
-			if _ensure_sta is not None:
-				_ensure_sta()
+			lib.soundobj_wasapi_monitor_uninit(self._engine)
 			lib.ma_engine_uninit(self._engine)
-			if self._resource_manager:
-				lib.ma_resource_manager_uninit(self._resource_manager)
-			if hasattr(self, '_url_vfs') and self._url_vfs != ffi.NULL:
-				lib.soundobj_url_vfs_destroy(self._url_vfs)
+		if hasattr(self, '_resource_manager') and self._resource_manager:
+			lib.ma_resource_manager_uninit(self._resource_manager)
+		if hasattr(self, '_url_vfs') and self._url_vfs != ffi.NULL:
+			lib.soundobj_url_vfs_destroy(self._url_vfs)
 	def start(self) -> bool:
 		"""Start the audio engine.
 		Returns:
@@ -528,6 +530,7 @@ class Sound:
 			return False
 		self._sound = ffi.new("ma_sound*")
 		flags = lib.MA_SOUND_FLAG_STREAM if stream else lib.MA_SOUND_FLAG_DECODE
+		# Pass the MA_SOUND_FLAG_UNKNOWN_LENGTH flag if loading from a URI, Curl will attempt to retrieve the length for us later
 		if is_uri(filename):
 			flags |= lib.MA_SOUND_FLAG_UNKNOWN_LENGTH
 		filename_bytes = filename.encode('utf-8')

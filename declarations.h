@@ -537,3 +537,5 @@ void ma_engine_node_uninit(ma_engine_node* pEngineNode, const ma_allocation_call
 ma_decoding_backend_vtable** soundobj_get_custom_decoders(ma_uint32* count);
 ma_vfs* soundobj_url_vfs_create(void);
 void soundobj_url_vfs_destroy(ma_vfs* vfs);
+void soundobj_wasapi_monitor_init(ma_engine* pEngine);
+void soundobj_wasapi_monitor_uninit(ma_engine* pEngine);
