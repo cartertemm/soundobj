@@ -14,6 +14,7 @@ lib_dir = root_dir / "lib"
 if not vcpkg.install_path.exists():
 	vcpkg.build()
 ffibuilder = FFI()
+curl_lib = "libcurl" if sys.platform == "win32" else "curl"
 
 with open(root_dir / "declarations.h", "r") as f:
 	cdefs = f.read()
@@ -33,6 +34,8 @@ ffibuilder.set_source("_c_miniaudio", """
 	// Include implementation files directly to avoid complex linking issues during pip install
 	#include "lib/miniaudio_libopus.c"
 	#include "lib/miniaudio_libvorbis.c"
+	#include <curl/curl.h>
+	#include "lib/url_vfs.c"
 
 	ma_decoding_backend_vtable** soundobj_get_custom_decoders(ma_uint32* count) {
 		static ma_decoding_backend_vtable* custom_decoders[2];
@@ -44,7 +47,7 @@ ffibuilder.set_source("_c_miniaudio", """
 """,
 	include_dirs=include_dirs,
 	library_dirs=library_dirs,
-	libraries=["opus", "opusfile", "ogg", "vorbis", "vorbisfile"]
+	libraries=["opus", "opusfile", "ogg", "vorbis", "vorbisfile", curl_lib, "zlib", "ws2_32", "crypt32", "wldap32", "advapi32", "secur32", "iphlpapi", "normaliz"]
 )
 
 if __name__ == "__main__":

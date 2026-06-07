@@ -77,6 +77,9 @@ def is_uri(x):
 		return False
 
 
+_SUPPORTED_URL_SCHEMES = ('http', 'https', 'ftp', 'ftps')
+
+
 class MiniAudioError(Exception):
 	"""Exception raised for miniaudio-related errors.
 	This exception is raised when miniaudio operations fail, such as
@@ -151,9 +154,13 @@ class Engine:
 				ma_config.noAutoStart = 1
 			if config.noDevice:
 				ma_config.noDevice = 1
+		self._url_vfs = ffi.NULL
 		rm_config = lib.ma_resource_manager_config_init()
 		if rm_config:
 			rm_config.ppCustomDecodingBackendVTables = lib.soundobj_get_custom_decoders(ffi.addressof(rm_config, "customDecodingBackendCount"))
+			self._url_vfs = lib.soundobj_url_vfs_create()
+			if self._url_vfs != ffi.NULL:
+				rm_config.pVFS = self._url_vfs
 			result = lib.ma_resource_manager_init(ffi.addressof(rm_config), self._resource_manager)
 			if result == lib.MA_SUCCESS:
 				ma_config.pResourceManager = self._resource_manager
@@ -187,6 +194,8 @@ class Engine:
 			lib.ma_engine_uninit(self._engine)
 			if self._resource_manager:
 				lib.ma_resource_manager_uninit(self._resource_manager)
+			if hasattr(self, '_url_vfs') and self._url_vfs != ffi.NULL:
+				lib.soundobj_url_vfs_destroy(self._url_vfs)
 	def start(self) -> bool:
 		"""Start the audio engine.
 		Returns:
@@ -501,11 +510,11 @@ class Sound:
 			stream: Whether to stream the audio (True) or load entirely into memory (False).
 		Returns:
 			True if successful, False otherwise.
-		Note:
-			Not yet implemented.
 		"""
-		# TODO: Implement URL loading with proper HTTP/FTP(s) handling
-		raise NotImplementedError("URL loading not yet implemented")
+		scheme = url.lower().split('://')[0] if '://' in url else ''
+		if scheme not in _SUPPORTED_URL_SCHEMES:
+			raise ValueError(f"Unsupported URL scheme: {scheme!r}")
+		return self.load_from_file(url, stream=stream)
 
 	def load_from_file(self, filename: str, stream: bool = True) -> bool:
 		"""Load audio from a file.
@@ -519,6 +528,8 @@ class Sound:
 			return False
 		self._sound = ffi.new("ma_sound*")
 		flags = lib.MA_SOUND_FLAG_STREAM if stream else lib.MA_SOUND_FLAG_DECODE
+		if is_uri(filename):
+			flags |= lib.MA_SOUND_FLAG_UNKNOWN_LENGTH
 		filename_bytes = filename.encode('utf-8')
 		result = lib.ma_sound_init_from_file(
 			self.engine._engine,

@@ -535,3 +535,5 @@ ma_result ma_engine_node_init_preallocated(const ma_engine_node_config* pConfig,
 ma_result ma_engine_node_init(const ma_engine_node_config* pConfig, const ma_allocation_callbacks* pAllocationCallbacks, ma_engine_node* pEngineNode);
 void ma_engine_node_uninit(ma_engine_node* pEngineNode, const ma_allocation_callbacks* pAllocationCallbacks);
 ma_decoding_backend_vtable** soundobj_get_custom_decoders(ma_uint32* count);
+ma_vfs* soundobj_url_vfs_create(void);
+void soundobj_url_vfs_destroy(ma_vfs* vfs);

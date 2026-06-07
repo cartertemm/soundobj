@@ -3,6 +3,7 @@
 		"libogg",
 		"opus",
 		"opusfile",
-		"libvorbis"
+		"libvorbis",
+		{ "name": "curl", "features": ["ssl"] }
 	]
 }
