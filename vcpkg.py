@@ -8,7 +8,7 @@ vcpkg_path = Path(__file__, "..", "vcpkg", "vcpkg" if sys.platform != "win32" el
 # Try to determine triplet being built for, logic probably could be improved
 if sys.platform == "win32": triplet = "x64-windows-static-md"
 elif sys.platform == "darwin": triplet = "arm64-osx" if platform.machine() == "arm64" else "x64-osx"
-elif sys.platform == "linux": triplet = "x64-linux"
+elif sys.platform == "linux": triplet = "arm64-linux" if platform.machine() == "aarch64" else "x64-linux"
 else: sys.exit("unable to determine vcpkg triplet.")
 install_path = Path(__file__, "..", "vcpkg_installed", triplet).resolve()
 
