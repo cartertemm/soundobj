@@ -34,6 +34,31 @@ def opus_file():
 	return str(FIXTURES / "test.opus")
 
 
+@pytest.fixture(scope="session")
+def stereo_file():
+	return str(FIXTURES / "test_stereo.wav")
+
+
+@pytest.fixture(scope="session")
+def wav_22050_file():
+	return str(FIXTURES / "test_22050.wav")
+
+
+@pytest.fixture(scope="session")
+def wav_48000_file():
+	return str(FIXTURES / "test_48000.wav")
+
+
+@pytest.fixture(scope="session")
+def wav_24bit_file():
+	return str(FIXTURES / "test_24bit.wav")
+
+
+@pytest.fixture(scope="session")
+def wav_f32_file():
+	return str(FIXTURES / "test_f32.wav")
+
+
 @pytest.fixture(params=["wav_file", "ogg_file", "opus_file"])
 def audio_file(request):
 	return request.getfixturevalue(request.param)

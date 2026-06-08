@@ -1,3 +1,6 @@
+import time
+import threading
+
 import pytest
 
 
@@ -217,3 +220,155 @@ def test_double_load_same_instance(no_device_engine, wav_file):
 	s.load(wav_file, stream=False)
 	s.load(wav_file, stream=False)
 	assert s._loaded is True
+
+
+def test_length_accuracy(loaded_sound):
+	assert abs(loaded_sound.length_in_seconds - 1.0) < 0.05
+
+
+def test_stereo_loads(no_device_engine, stereo_file):
+	import soundobj
+	s = soundobj.Sound(no_device_engine)
+	assert s.load(stereo_file, stream=False) is True
+	assert s.length_in_seconds > 0
+
+
+def test_22050hz_loads(no_device_engine, wav_22050_file):
+	import soundobj
+	s = soundobj.Sound(no_device_engine)
+	assert s.load(wav_22050_file, stream=False) is True
+	assert s.length_in_seconds > 0
+
+
+def test_48000hz_loads(no_device_engine, wav_48000_file):
+	import soundobj
+	s = soundobj.Sound(no_device_engine)
+	assert s.load(wav_48000_file, stream=False) is True
+	assert s.length_in_seconds > 0
+
+
+def test_24bit_wav_loads(no_device_engine, wav_24bit_file):
+	import soundobj
+	s = soundobj.Sound(no_device_engine)
+	assert s.load(wav_24bit_file, stream=False) is True
+	assert s.length_in_seconds > 0
+
+
+def test_f32_wav_loads(no_device_engine, wav_f32_file):
+	import soundobj
+	s = soundobj.Sound(no_device_engine)
+	assert s.load(wav_f32_file, stream=False) is True
+	assert s.length_in_seconds > 0
+
+
+def test_reload_after_stop(engine, wav_file):
+	import soundobj
+	s = soundobj.Sound(engine)
+	s.load(wav_file, stream=False)
+	s.play()
+	s.stop()
+	s.play()
+	assert s.is_playing is True
+	s.stop()
+
+
+def test_many_sounds_simultaneously(engine, wav_file):
+	import soundobj
+	sounds = [soundobj.Sound(engine) for _ in range(20)]
+	for s in sounds:
+		s.load(wav_file, stream=False)
+		s.play()
+	assert all(s.is_playing for s in sounds)
+	for s in sounds:
+		s.stop()
+
+
+def test_destroy_sound_while_playing(soundobj_module, wav_file):
+	try:
+		eng = soundobj_module.Engine()
+	except soundobj_module.MiniAudioError as e:
+		pytest.skip(f"no audio device: {e}")
+	s = soundobj_module.Sound(eng)
+	s.load(wav_file, stream=False)
+	s.play()
+	del s
+	del eng
+
+
+def test_stream_position_advances(engine, wav_file):
+	import soundobj
+	s = soundobj.Sound(engine)
+	s.load(wav_file, stream=True)
+	s.play()
+	time.sleep(0.2)
+	assert s.position_in_seconds > 0
+	s.stop()
+
+
+def test_seek_streaming_sound(engine, wav_file):
+	import soundobj
+	s = soundobj.Sound(engine)
+	s.load(wav_file, stream=True)
+	s.play()
+	s.pause()
+	target = s.length_in_seconds * 0.5
+	s.position_in_seconds = target
+	assert s.position_in_seconds == pytest.approx(target, abs=0.1)
+
+
+def test_volume_above_1(loaded_sound):
+	loaded_sound.volume = 2.0
+	assert loaded_sound.volume == pytest.approx(2.0)
+
+
+def test_volume_negative(loaded_sound):
+	loaded_sound.volume = -0.5
+	assert loaded_sound.volume == pytest.approx(-0.5)
+
+
+def test_pitch_zero(loaded_sound):
+	loaded_sound.pitch = 0.0
+	assert loaded_sound.pitch > 0
+
+
+def test_position_beyond_end(loaded_sound_real):
+	loaded_sound_real.play()
+	loaded_sound_real.pause()
+	loaded_sound_real.position_in_seconds = loaded_sound_real.length_in_seconds + 10.0
+	assert loaded_sound_real.position_in_seconds >= 0.0
+
+
+def test_out_of_bounds_listener_index_no_crash(no_device_engine):
+	no_device_engine.set_listener_position(99, 0.0, 0.0, 0.0)
+
+
+def test_attenuation_model_c_values(soundobj_module):
+	lib = soundobj_module.lib
+	assert int(lib.ma_attenuation_model_none) == 0
+	assert int(lib.ma_attenuation_model_inverse) == 1
+	assert int(lib.ma_attenuation_model_linear) == 2
+	assert int(lib.ma_attenuation_model_exponential) == 3
+
+
+def test_positioning_mode_c_values(soundobj_module):
+	lib = soundobj_module.lib
+	assert int(lib.ma_positioning_absolute) == 0
+	assert int(lib.ma_positioning_relative) == 1
+
+
+def test_concurrent_property_access(loaded_sound_real):
+	loaded_sound_real.play()
+	errors = []
+
+	def worker():
+		try:
+			for _ in range(100):
+				loaded_sound_real.volume = 0.5
+				_ = loaded_sound_real.volume
+		except Exception as e:
+			errors.append(e)
+
+	t = threading.Thread(target=worker)
+	t.start()
+	t.join(timeout=5.0)
+	assert not errors
