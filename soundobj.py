@@ -154,6 +154,10 @@ class Engine:
 				ma_config.noAutoStart = 1
 			if config.noDevice:
 				ma_config.noDevice = 1
+				if ma_config.channels == 0:
+					ma_config.channels = 2
+				if ma_config.sampleRate == 0:
+					ma_config.sampleRate = 44100
 		self._url_vfs = ffi.NULL
 		rm_config = lib.ma_resource_manager_config_init()
 		if rm_config:
