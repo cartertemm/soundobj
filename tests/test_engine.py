@@ -5,21 +5,19 @@ def test_init_default(engine):
 	assert engine._initialized
 
 
-def test_init_custom_config(no_device_engine):
-	import soundobj
-	e = soundobj.Engine(soundobj.EngineConfig(channels=2, sampleRate=44100, noDevice=True))
+def test_init_custom_config(soundobj_module):
+	e = soundobj_module.Engine(soundobj_module.EngineConfig(channels=2, sampleRate=44100, noDevice=True))
 	assert e._initialized
 
 
-def test_init_no_auto_start(no_device_engine):
-	import soundobj
-	e = soundobj.Engine(soundobj.EngineConfig(noAutoStart=True, noDevice=True))
+def test_init_no_auto_start(soundobj_module):
+	e = soundobj_module.Engine(soundobj_module.EngineConfig(noAutoStart=True, noDevice=True))
 	assert e._initialized
 
 
 def test_volume_roundtrip(no_device_engine):
-	no_device_engine.volume = 0.5
-	assert no_device_engine.volume == pytest.approx(0.5)
+	no_device_engine.volume = 0.3
+	assert no_device_engine.volume == pytest.approx(0.3)
 
 
 def test_start_stop(engine):

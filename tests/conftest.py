@@ -12,6 +12,13 @@ except Exception as e:
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
+@pytest.fixture
+def soundobj_module():
+	if _import_error is not None:
+		pytest.skip(f"soundobj unavailable: {_import_error}")
+	return soundobj
+
+
 @pytest.fixture(scope="session")
 def wav_file():
 	return str(FIXTURES / "test.wav")
@@ -66,4 +73,6 @@ def engine():
 def no_device_engine():
 	if _import_error is not None:
 		pytest.skip(f"soundobj unavailable: {_import_error}")
-	return soundobj.Engine(soundobj.EngineConfig(noDevice=True))
+	eng = soundobj.Engine(soundobj.EngineConfig(noDevice=True))
+	yield eng
+	eng.stop()
