@@ -4,9 +4,8 @@
  * A secondary IMMNotificationClient registered alongside miniaudio's own to
  * handle PKEY_AudioEngine_DeviceFormat property changes - i.e. the user
  * changed the sample rate or bit depth in Windows Sound settings. Miniaudio's
- * built-in handler ignores this notification; we trigger the same
- * reroute/reinit path it uses for device swaps so playback resumes
- * without application restart.
+ * built-in handler ignores this notification.
+* We perform the same task (reroute and reinit) so playback resumes without the need to restart the app.
  *
  * This file must be #include-d after MINIAUDIO_IMPLEMENTATION in the same
  * translation unit so the otherwise-static internals (ma_device_reroute__wasapi,
