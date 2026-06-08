@@ -373,7 +373,11 @@ ma_vfs* soundobj_url_vfs_create(void) {
 	if (s_curl_init_count++ == 0)
 		curl_global_init(CURL_GLOBAL_DEFAULT);
 	soundobj_url_vfs* vfs = (soundobj_url_vfs*)calloc(1, sizeof(soundobj_url_vfs));
-	if (!vfs) return NULL;
+	if (!vfs) {
+		if (--s_curl_init_count == 0)
+			curl_global_cleanup();
+		return NULL;
+	}
 	ma_default_vfs_init(&vfs->default_vfs, NULL);
 	vfs->cb.onOpen  = url_vfs_open;
 	vfs->cb.onOpenW = url_vfs_open_w;
