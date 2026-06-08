@@ -37,7 +37,8 @@ def loaded_sound(request, no_device_engine):
 	path = request.getfixturevalue(request.param)
 	s = soundobj.Sound(no_device_engine)
 	s.load(path, stream=False)
-	return s
+	yield s
+	s.stop()
 
 
 @pytest.fixture(params=["wav_file", "ogg_file", "opus_file"])
@@ -45,7 +46,8 @@ def loaded_sound_real(request, engine):
 	path = request.getfixturevalue(request.param)
 	s = soundobj.Sound(engine)
 	s.load(path, stream=False)
-	return s
+	yield s
+	s.stop()
 
 
 @pytest.fixture
@@ -57,6 +59,7 @@ def engine():
 	except soundobj.MiniAudioError as e:
 		pytest.skip(f"no audio device: {e}")
 	yield eng
+	eng.stop()
 
 
 @pytest.fixture
