@@ -61,6 +61,16 @@ pip install cffi
 python build_ffi.py
 ```
 
+## Testing
+
+After building the FFI wrapper, run the test suite with:
+
+```bash
+pytest tests/
+```
+
+Tests that require a real audio device are skipped automatically on headless machines. No additional dependencies beyond `pytest` are needed.
+
 ## Roadmap
 
 - [ ] Upload to PyPI
