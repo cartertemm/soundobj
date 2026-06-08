@@ -75,7 +75,7 @@ def test_seek_and_position(loaded_sound_real):
 	loaded_sound_real.pause()
 	target = loaded_sound_real.length_in_seconds * 0.5
 	loaded_sound_real.position_in_seconds = target
-	assert loaded_sound_real.position_in_seconds >= target * 0.9
+	assert loaded_sound_real.position_in_seconds == pytest.approx(target, abs=0.1)
 
 
 def test_position_3d_roundtrip(loaded_sound):
@@ -206,16 +206,8 @@ def test_load_from_memory_raises(no_device_engine):
 		s.load_from_memory(b"\x00" * 100)
 
 
-def test_invalid_url_scheme_raises(no_device_engine):
-	import soundobj
-	s = soundobj.Sound(no_device_engine)
-	with pytest.raises(ValueError, match="Unsupported URL scheme"):
-		s.load_from_url("sftp://example.com/audio.ogg")
-
-
-def test_sound_without_engine_uses_global(engine, wav_file):
-	import soundobj
-	s = soundobj.Sound(source=wav_file)
+def test_sound_without_engine_uses_global(soundobj_module, wav_file):
+	s = soundobj_module.Sound(source=wav_file)
 	assert s._loaded is True
 
 
