@@ -48,7 +48,7 @@ ATTENUATION_MODEL_MAP = {
 	AttenuationModel.EXPONENTIAL: lib.ma_attenuation_model_exponential
 }
 
-ATTENUATION_MODEL_REVERSE_MAP = {v:k for v, k in ATTENUATION_MODEL_MAP.items()}
+ATTENUATION_MODEL_REVERSE_MAP = {v:k for k, v in ATTENUATION_MODEL_MAP.items()}
 
 POSITIONING_MODE_MAP = {
 	PositioningMode.ABSOLUTE: lib.ma_positioning_absolute,
