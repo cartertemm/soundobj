@@ -171,3 +171,6 @@ pyrightconfig.json
 
 # Soundobj VCPKG install
 vcpkg_installed/
+
+# Cibuildwheel output
+wheelhouse/
