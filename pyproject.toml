@@ -5,12 +5,51 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "soundobj"
 version = "0.2.0"
-description = "Light weight full featured audio playback in Python, brought to you by Miniaudio"
+description = "Lightweight full-featured audio playback in Python, built on Miniaudio"
 readme = "README.md"
+license = { text = "MIT" }
 authors = [
     { name = "Carter Temm", email = "cartertemm@gmail.com" }
 ]
+keywords = ["audio", "sound", "playback", "miniaudio", "3d-audio", "spatial-audio", "ogg", "opus"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: C",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Multimedia :: Sound/Audio :: Players",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+]
 requires-python = ">=3.13"
 dependencies = ["cffi>=1.17.1"]
+
+[project.urls]
+Repository = "https://github.com/cartertemm/soundobj"
+"Bug Tracker" = "https://github.com/cartertemm/soundobj/issues"
+
 [tool.setuptools]
-py-modules=["soundobj"]
+py-modules = ["soundobj"]
+
+[tool.cibuildwheel]
+build = "cp313-*"
+# 32-bit and musl builds are not supported
+skip = ["*-win32", "*-manylinux_i686", "*-musllinux*"]
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]
+
+[tool.cibuildwheel.linux]
+# vcpkg installs the native deps inside the project dir; the manylinux container
+# mounts the project directory so vcpkg_installed persists across builds.
+# Subsequent builds will be much faster once vcpkg has already run.
+before-all = "python3 {project}/vcpkg.py"
+
+[tool.cibuildwheel.macos]
+archs = ["x86_64", "arm64"]
+# brew packages set up pkg-config, which build_ffi.py will detect automatically
+before-all = "brew install opus opusfile libvorbis libogg curl"
