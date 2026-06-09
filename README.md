@@ -33,8 +33,9 @@ That said, I wanted something portable, permissive, and that just works with an 
 
 - Python 3.13+
 - cffi library
-- miniaudio library (included in `lib/` directory)
 - vcpkg (included as submodule in vcpkg/ directory)
+- miniaudio library (pulled in by vcpkg)
+- curl (pulled in by vcpkg), used for URL streams
 
 ### Build Instructions
 
