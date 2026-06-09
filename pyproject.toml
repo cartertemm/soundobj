@@ -32,6 +32,9 @@ dependencies = ["cffi>=1.17.1"]
 Repository = "https://github.com/cartertemm/soundobj"
 "Bug Tracker" = "https://github.com/cartertemm/soundobj/issues"
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
 [tool.setuptools]
 py-modules = ["soundobj"]
 
