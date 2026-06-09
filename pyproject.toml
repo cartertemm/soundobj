@@ -45,6 +45,7 @@ skip = ["*-win32", "*-manylinux_i686", "*-musllinux*"]
 
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
+before-all = "python {project}/vcpkg.py"
 
 [tool.cibuildwheel.linux]
 # vcpkg installs the native deps inside the project dir; the manylinux container
@@ -53,6 +54,6 @@ archs = ["AMD64"]
 before-all = "python3 {project}/vcpkg.py"
 
 [tool.cibuildwheel.macos]
-archs = ["x86_64", "arm64"]
-# brew packages set up pkg-config, which build_ffi.py will detect automatically
+# macos-13 (x86_64) and macos-latest (arm64) runners each build their native arch.
+# brew packages set up pkg-config, which build_ffi.py will detect automatically.
 before-all = "brew install opus opusfile libvorbis libogg curl"

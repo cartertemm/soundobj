@@ -12,20 +12,22 @@ elif sys.platform == "linux": triplet = "arm64-linux" if platform.machine() == "
 else: sys.exit("unable to determine vcpkg triplet.")
 install_path = Path(__file__, "..", "vcpkg_installed", triplet).resolve()
 
+project_dir = Path(__file__).parent.resolve()
+
 def bootstrap_vcpkg():
 	if vcpkg_path.exists() and vcpkg_path.is_file():
 		return
 	print("Bootstrapping VCPKG...")
 	if sys.platform == "win32":
-		subprocess.check_output(vcpkg_path.parent / "bootstrap-vcpkg.bat")
+		subprocess.check_output(vcpkg_path.parent / "bootstrap-vcpkg.bat", cwd=str(project_dir))
 	else:
-		subprocess.check_output(vcpkg_path.parent / "bootstrap-vcpkg.sh")
+		subprocess.check_output(vcpkg_path.parent / "bootstrap-vcpkg.sh", cwd=str(project_dir))
 
 def build():
 	bootstrap_vcpkg()
 	print("Performing VCPKG install...")
 	try:
-		subprocess.check_output([vcpkg_path, "install", "--triplet", triplet])
+		subprocess.check_output([vcpkg_path, "install", "--triplet", triplet], cwd=str(project_dir))
 	except subprocess.CalledProcessError as cpe:
 		sys.exit(f"Building packages for {triplet} failed with error code {cpe.returncode}.\n{cpe.output.decode()}")
 
