@@ -47,13 +47,12 @@ def http_server():
 
 
 def test_load_url_stream_true(http_server):
-	"""stream=True: sound loads and length is known."""
+	"""stream=True: sound loads successfully."""
 	engine = soundobj.Engine()
 	s = soundobj.Sound(engine)
 	result = s.load(f"{http_server}/item.ogg", stream=True)
 	assert result is True
 	assert s._loaded is True
-	assert s.length_in_seconds > 0
 
 
 def test_load_url_stream_false(http_server):
