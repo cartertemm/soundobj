@@ -39,9 +39,8 @@ def _find_via_vcpkg():
 		import vcpkg as _vcpkg
 	except ImportError:
 		return None
-	if not _vcpkg.install_path.exists():
-		print("vcpkg found, installing packages...")
-		_vcpkg.build()
+	print("vcpkg found, installing packages...")
+	_vcpkg.build()
 	if _vcpkg.install_path.exists():
 		return (
 			[str(_vcpkg.install_path / "include")],
@@ -107,7 +106,7 @@ ffibuilder.set_source("_c_miniaudio", """
 	#include <stdint.h>
 	#include <stdlib.h>
 	#define MINIAUDIO_IMPLEMENTATION
-	#include "lib/miniaudio.h"
+	#include <miniaudio.h>
 	#include "lib/miniaudio_libopus.h"
 	#include "lib/miniaudio_libvorbis.h"
 
