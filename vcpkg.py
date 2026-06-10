@@ -18,10 +18,11 @@ def bootstrap_vcpkg():
 	if vcpkg_path.exists() and vcpkg_path.is_file():
 		return
 	print("Bootstrapping VCPKG...")
-	if sys.platform == "win32":
-		subprocess.check_output(vcpkg_path.parent / "bootstrap-vcpkg.bat", cwd=str(project_dir))
-	else:
-		subprocess.check_output(vcpkg_path.parent / "bootstrap-vcpkg.sh", cwd=str(project_dir))
+	script = "bootstrap-vcpkg.bat" if sys.platform == "win32" else "bootstrap-vcpkg.sh"
+	try:
+		subprocess.check_output(vcpkg_path.parent / script, cwd=str(project_dir), stderr=subprocess.STDOUT)
+	except subprocess.CalledProcessError as cpe:
+		sys.exit(f"Bootstrapping vcpkg failed with error code {cpe.returncode}.\n{cpe.output.decode()}")
 
 def build():
 	bootstrap_vcpkg()
