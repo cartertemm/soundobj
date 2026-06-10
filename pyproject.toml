@@ -51,8 +51,14 @@ before-all = "python {project}/vcpkg.py"
 # vcpkg installs the native deps inside the project dir; the manylinux container
 # mounts the project directory so vcpkg_installed persists across builds.
 # Subsequent builds will be much faster once vcpkg has already run.
-# manylinux2014 ships without zip, which vcpkg's bootstrap and binary caching require.
-before-all = "yum install -y zip && python3 {project}/vcpkg.py"
+# manylinux2014 (CentOS 7) is missing several build prerequisites:
+#   - zip: required by vcpkg bootstrap and binary caching
+#   - ninja-build: vcpkg's own prebuilt ninja needs a newer libstdc++ than CentOS 7
+#     ships, so VCPKG_FORCE_SYSTEM_BINARIES makes vcpkg use the system cmake/ninja
+#   - perl-IPC-Cmd/Data-Dumper/Time-Piece + kernel-headers: needed to build openssl (via curl[ssl])
+# The env var is set globally (not just here) because the wheel build also runs vcpkg via build_ffi.py.
+environment = { VCPKG_FORCE_SYSTEM_BINARIES = "1" }
+before-all = "yum install -y zip ninja-build perl-IPC-Cmd perl-Data-Dumper perl-Time-Piece kernel-headers && python3 {project}/vcpkg.py"
 
 [tool.cibuildwheel.macos]
 # macos-13 (x86_64) and macos-latest (arm64) runners each build their native arch.
