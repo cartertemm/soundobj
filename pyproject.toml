@@ -51,7 +51,8 @@ before-all = "python {project}/vcpkg.py"
 # vcpkg installs the native deps inside the project dir; the manylinux container
 # mounts the project directory so vcpkg_installed persists across builds.
 # Subsequent builds will be much faster once vcpkg has already run.
-before-all = "python3 {project}/vcpkg.py"
+# manylinux2014 ships without zip, which vcpkg's bootstrap and binary caching require.
+before-all = "yum install -y zip && python3 {project}/vcpkg.py"
 
 [tool.cibuildwheel.macos]
 # macos-13 (x86_64) and macos-latest (arm64) runners each build their native arch.
