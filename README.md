@@ -29,6 +29,10 @@ That said, I wanted something portable, permissive, and that just works with an 
 
 ## Installation
 
+To get up and running quickly, you can simply `pip install soundobj`.
+
+To build from source instead:
+
 ### Prerequisites
 
 - Python 3.13+
@@ -74,7 +78,7 @@ Tests that require a real audio device are skipped automatically on headless mac
 
 ## Roadmap
 
-- [ ] Upload to PyPI
+- [x] Upload to PyPI
 - [ ] Memory streams
 - [ ] A more comprehensive environment for managing multiple sounds simultaniously
 - [ ] More demos/examples
