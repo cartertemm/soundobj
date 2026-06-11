@@ -61,6 +61,7 @@ environment = { VCPKG_FORCE_SYSTEM_BINARIES = "1" }
 before-all = "yum install -y zip ninja-build perl-IPC-Cmd perl-Data-Dumper perl-Time-Piece kernel-headers && python3 {project}/vcpkg.py"
 
 [tool.cibuildwheel.macos]
-# macos-13 (x86_64) and macos-latest (arm64) runners each build their native arch.
+# macos-latest (arm64) builds the native arch. Intel (x86_64) is not built: GitHub's
+# only hosted Intel runner, macos-13, has unreliable queue availability.
 # vcpkg provides all native deps including miniaudio, which brew does not package.
 before-all = "python3 {project}/vcpkg.py"
