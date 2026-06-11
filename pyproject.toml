@@ -39,9 +39,12 @@ pythonpath = ["."]
 py-modules = ["soundobj"]
 
 [tool.cibuildwheel]
-build = "cp313-*"
+build = "cp313-* cp314-*"
 # 32-bit and musl builds are not supported
 skip = ["*-win32", "*-manylinux_i686", "*-musllinux*"]
+# Pin manylinux2014: cibuildwheel 3.x defaults to manylinux_2_28, but the Linux
+# before-all below is written for CentOS 7 (yum). manylinux2014 images still ship cp314.
+manylinux-x86_64-image = "manylinux2014"
 
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
